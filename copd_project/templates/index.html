@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COPD Detector</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .result-box {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header text-center bg-primary text-white">
+                    <h2>COPD Detection from Lung Sounds</h2>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted text-center">Upload a <strong>.wav</strong> audio file of a lung sound to get a prediction.</p>
+                    
+                    <!-- Upload Form -->
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="input-group mb-3">
+                            <input type="file" class="form-control" name="audio_file" id="audioUpload" accept=".wav" required>
+                            <button class="btn btn-primary" type="submit">Detect</button>
+                        </div>
+                    </form>
+
+                    <!-- Audio Player (hidden by default) -->
+                    <div id="audioPlayerContainer" class="mt-4" style="display: none;">
+                        <h5>Uploaded Audio:</h5>
+                        <audio id="audioPlayer" controls class="w-100">
+                            Your browser does not support the audio element.
+                        </audio>
+                    </div>
+
+                    <!-- Prediction Result -->
+                    {% if prediction %}
+                    <div class="mt-4 p-4 rounded text-center 
+                        {% if prediction == 'COPD' %} bg-danger-subtle text-danger-emphasis 
+                        {% else %} bg-success-subtle text-success-emphasis {% endif %}">
+                        <h4 class="mb-3">Detection Result</h4>
+                        <div class="result-box">{{ prediction }}</div>
+                        <p class="mt-2">Confidence: {{ confidence }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if error %}
+                    <div class="alert alert-danger mt-4">{{ error }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Simple JS for Audio Player Preview -->
+<script>
+    const audioUpload = document.getElementById('audioUpload');
+    const audioPlayerContainer = document.getElementById('audioPlayerContainer');
+    const audioPlayer = document.getElementById('audioPlayer');
+
+    audioUpload.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const fileURL = URL.createObjectURL(file);
+            audioPlayer.src = fileURL;
+            audioPlayerContainer.style.display = 'block';
+        }
+    });
+
+    // If the page reloads with a file already processed (from server-side), show its player
+    {% if uploaded_file_url %}
+        audioPlayer.src = "{{ uploaded_file_url }}";
+        audioPlayerContainer.style.display = 'block';
+    {% endif %}
+</script>
+
+</body>
+</html>
